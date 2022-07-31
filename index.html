@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="./node_modules/lovoski_jsgameframework/jquery.min.js"></script>
+    <script src="./node_modules/lovoski_jsgameframework/jsgame/jsgame.client.js"></script>
+    <title>TF</title>
+</head>
+
+<body>
+    <script>
+        let init_div = $("<div id='init-div'></div>");
+        $("body").css({
+            "background-color": "gray"
+        })
+        init_div.css({
+            "width": 1000 + "px",
+            "height": 800 + "px",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            "background-color": "black"
+        });
+        init_div.appendTo("body");
+        let init_canv = $("<canvas width='1000px' height='800px'></canvas>");
+        let logoImg = new Image();
+        logoImg.src = ".\\resources\\images\\others\\logo.png";
+        let init_ctx = init_canv.get(0).getContext("2d");
+        logoImg.onload = function () {
+            init_ctx.drawImage(logoImg, 0, 0, 892, 140, 54, 100, 892, 140);
+        }
+        init_ctx.font = "bold 35px Courier";
+        init_ctx.fillStyle = "#ffffff";
+        init_ctx.fillText("[PRESS \'F1\' TO START ONLINE GAME]", 180, 500);
+        init_ctx.fillText("[PRESS \'F2\' TO START IN ONE KEYBOARD]", 140, 550);
+        init_canv.appendTo(init_div);
+
+        $("body").on("keydown", function (e) {
+            //console.log(e.keyCode);
+            if (e.keyCode == 112 || e.keyCode == 113) {
+
+                let gameMode = e.keyCode == 112 ? 0 : 1;
+
+                new Audio(".\\resources\\audios\\start.wav").play();
+                //console.log("key down");
+                init_canv.remove();
+                init_div.remove();
+
+                $("body").on("keydown", null);
+                var game = new JSgame(gameMode);
+                game.initCanvas(800, 1000, 8);
+                //this should be in the module latter
+                $("body").css({
+                    "background-color": "gray"
+                });
+                var backGround = new Image();
+                backGround.src = ".\\resources\\images\\others\\background.png";
+                backGround.onload = function () {
+                    game.canvas[0].drawImage(backGround, 0, 0, 1000, 720);
+                }
+                var bossHealth = 0;
+                var p1Health = 0,
+                    p2Health = 0;
+                //up code
+                let coverImg = new Image();
+                coverImg.src = ".\\resources\\images\\others\\mask.png";
+                coverImg.onload = function() {
+                    game.canvas[6].drawImage(coverImg,0,0,312,156,80,715,200,100);
+                }
+                game.canvas[7].font = "bold 20px Courier";
+                game.canvas[7].fillStyle = "#ffffff";
+                game.canvas[7].fillText("STATUS:", 100, 720);
+
+                game.createSocketClient("127.0.0.1", 9807, 25);
+                game.standByToDraw(function (msgString, canvas) {
+                    let Data = JSON.parse(msgString);
+                    let bArr = Data["bulletCollection"];
+                    let eArr = Data["enemyTankCollection"];
+                    let bkArr = Data["brickCollection"];
+                    let boss = Data["boss"];
+                    let img = new Image();
+                    let bImg = new Image();
+                    let rbImg = new Image();
+                    let bombImg = new Image();
+                    let bossImg = new Image();
+                    bossImg.src = ".\\resources\\images\\enemyTank\\boss_un.png";
+                    bombImg.src = ".\\resources\\images\\others\\boom_dynamic.png";
+
+                    let hImg = new Image();
+                    hImg.src = ".\\resources\\images\\home\\home1.png";
+                    let dHImg = new Image();
+                    dHImg.src = ".\\resources\\images\\home\\home_destroyed.png";
+                    let bk1 = new Image();
+                    bk1.src = ".\\resources\\images\\scene\\brick.png";
+                    let bk2 = new Image();
+                    bk2.src = ".\\resources\\images\\scene\\iron.png";
+                    let bk3 = new Image();
+                    bk3.src = ".\\resources\\images\\scene\\gold.png";
+                    let bk4 = new Image();
+                    bk4.src = ".\\resources\\images\\scene\\tree.png"
+                    let bk5 = new Image();
+                    bk4.src = ".\\resources\\images\\scene\\ice.png"
+                    let loseImg = new Image();
+                    loseImg.src = ".\\resources\\images\\others\\gameover.png";
+                    let hObj = Data["home"];
+                    if (hObj.hp > 0) {
+                        canvas[3].drawImage(hImg, 0, 0, 48, 48, hObj.xPos, hObj.yPos, 48, 48);
+                    } else {
+                        canvas[3].drawImage(loseImg, 0, 0, 64, 32, 450, 320, 128, 64);
+                        canvas[3].drawImage(dHImg, 0, 0, 48, 48, hObj.xPos, hObj.yPos, 48, 48);
+                    }
+
+                    if (boss.hp > 0) {
+                        bossImg.src = ".\\resources\\images\\enemyTank\\boss_un.png";
+                        if (boss.curDir == 1) {
+                            canvas[2].clearRect(boss.ox - 4, boss.oy - 4, 104, 104);
+                            canvas[2].drawImage(bossImg, 0, 0, 96, 96, boss.xPos, boss.yPos, 96, 96);
+                        } else if (boss.curDir == 2) {
+                            canvas[2].clearRect(boss.ox - 4, boss.oy - 4, 104, 104);
+                            canvas[2].drawImage(bossImg, 0, 96, 96, 96, boss.xPos, boss.yPos, 96, 96);
+                        } else if (boss.curDir == 3) {
+                            canvas[2].clearRect(boss.ox - 4, boss.oy - 4, 104, 104);
+                            canvas[2].drawImage(bossImg, 0, 192, 96, 96, boss.xPos, boss.yPos, 96, 96);
+                        } else if (boss.curDir == 4) {
+                            canvas[2].clearRect(boss.ox - 4, boss.oy - 4, 104, 104);
+                            canvas[2].drawImage(bossImg, 0, 288, 96, 96, boss.xPos, boss.yPos, 96, 96);
+                        }
+                    } else {
+                        canvas[2].clearRect(boss.ox - 4, boss.oy - 4, 104, 104)
+                        if (boss.flag == 1) {
+                            game.animation(canvas[5], 100, bombImg, 96, boss.ox, boss.oy, 96, 0, 7,
+                                game);
+                        }
+                    }
+                    let t1 = "BOSS HP:" + boss.hp;
+                    //console.log("boss:"+boss.hp);
+                    canvas[7].clearRect(100, 720, 900, 20);
+                    canvas[7].fillText(t1, 100, 740);
+                    /*if (boss.hp!=bossHealth) {
+                        let lm = Math.max(bossHealth,boss.hp);
+                        bossHealth = boss.hp;
+                        console.log("clear");
+                        canvas[7].clearRect(100,720,900,10);
+                        for (let i = 0;i<lm;i++) {
+                            //canvas[7].clearRect(100+i*20,720,20,20);
+                            if (i<=boss.hp) {
+                                console.log("draw");
+                                healthImg.src = "./resources/images/bullet/bullet_b1.png";
+                                healthImg.onload = function() {
+                                    canvas[7].drawImage(healthImg,100+i*12,720);
+                                }
+                            }
+                        }
+                    }*/
+
+                    for (let i = 0; i < bkArr.length; i++) {
+                        if (bkArr[i].hp > 0) {
+                            if (bkArr[i].type == 1) {
+                                canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                                canvas[4].drawImage(bk1, 0, 0, 24, 24, bkArr[i].xPos, bkArr[i].yPos, 24,
+                                    24);
+                            } else if (bkArr[i].type == 3) {
+                                canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                                canvas[4].drawImage(bk2, 0, 0, 24, 24, bkArr[i].xPos, bkArr[i].yPos, 24,
+                                    24);
+                            } else if (bkArr[i].type == 5) {
+                                canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                                canvas[4].drawImage(bk3, 0, 0, 24, 24, bkArr[i].xPos, bkArr[i].yPos, 24,
+                                    24);
+                            } else if (bkArr[i].type==80) {
+                                console.log("draw tree")
+                                canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                                canvas[4].drawImage(bk4, 0, 0, 24, 24, bkArr[i].xPos, bkArr[i].yPos, 24,
+                                    24);
+                            } else if (bkArr[i].type==81) {
+                                console.log("draw ice")
+                                canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                                canvas[4].drawImage(bk5, 0, 0, 24, 24, bkArr[i].xPos, bkArr[i].yPos, 24,
+                                    24);
+                            }
+                        } else {
+                            canvas[4].clearRect(bkArr[i].xPos, bkArr[i].yPos, 24, 24);
+                        }
+                    }
+
+                    for (let i = 0; i < eArr.length; i++) {
+                        let e = eArr[i];
+
+                        if (e.hp > 0) {
+                            let eImg = new Image();
+                            if (e.tankNo == 0) {
+                                eImg.src = ".\\resources\\images\\enemyTank\\enemy_2_0.png";
+                            } else if (e.tankNo == 1) {
+                                eImg.src = ".\\resources\\images\\enemyTank\\enemy_2_1.png";
+                            } else if (e.tankNo == 2) {
+                                eImg.src = ".\\resources\\images\\enemyTank\\enemy_3_2.png";
+                            } else if (e.tankNo == 3) {
+                                eImg.src = ".\\resources\\images\\enemyTank\\enemy_4_3.png";
+                            }
+                            let cm = [0, 0, 0, 0];
+                            if (e.curDir == 1) {
+                                cm = [0, 0, 48, 48]; //u
+                            } else if (e.curDir == 2) {
+                                cm = [0, 48, 48, 48]; //d
+                            } else if (e.curDir == 3) {
+                                cm = [0, 96, 48, 48]; //l
+                            } else if (e.curDir == 4) {
+                                cm = [0, 144, 48, 48]; //r
+                            }
+                            canvas[2].clearRect(e.ox - 8, e.oy - 8, 64, 64);
+                            canvas[2].drawImage(eImg, cm[0], cm[1], cm[2], cm[3], e.xPos, e.yPos, 48,
+                                48);
+                        } else if (e.hp <= 0 && !e.wfr && e.life > 0) {
+                            canvas[2].clearRect(e.ox - 8, e.oy - 8, 64, 64);
+                            game.animation(canvas[5], 100, bombImg, 96, e.ox, e.oy, 48, 0, 7, game);
+                        } else if (e.life <= 0) {
+                            canvas[2].clearRect(e.ox - 8, e.oy - 8, 64, 64);
+                        }
+                    }
+
+                    let bullet_b1Img = new Image();
+                    bullet_b1Img.src = ".\\resources\\images\\bullet\\bullet_b1.png";
+                    let bullet_b2Img = new Image();
+                    bullet_b2Img.src = ".\\resources\\images\\bullet\\bullet_b2.png";
+
+                    for (let i = 0; i < bArr.length; i++) {
+                        let b = bArr[i];
+                        if (b == null) {
+                            continue;
+                        }
+                        if (b.flag == 1 || b.flag == 2) {
+                            if (b.flag == 2) {
+                                if (b.type==22 || b.type==23) new Audio(".\\resources\\audios\\real.wav").play();
+                                else if (b.type==21) new Audio(".\\resources\\audios\\Gunfire.wav").play();
+                            }
+                            if (b.type == 21 || b.type == 22 || b.type == 23) {
+                                if (b.dir == 1) {
+                                    if (b.type == 21) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_up.png";
+                                    else if (b.type == 22) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_up_f.png";
+                                    else if (b.type == 23) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_up_rec.png";
+                                } else if (b.dir == 2) {
+                                    if (b.type == 21) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_down.png";
+                                    else if (b.type == 22) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_down_f.png";
+                                    else if (b.type == 23) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_down_rec.png";
+                                } else if (b.dir == 3) {
+                                    if (b.type == 21) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_left.png";
+                                    else if (b.type == 22) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_left_f.png";
+                                    else if (b.type == 23) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_left_rec.png";
+                                } else if (b.dir == 4) {
+                                    if (b.type == 21) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_right.png";
+                                    else if (b.type == 22) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_right_f.png";
+                                    else if (b.type == 23) bImg.src =
+                                        ".\\resources\\images\\bullet\\bullet_right_rec.png";
+                                }
+                                canvas[1].clearRect(b.ox, b.oy, 12, 12);
+                                canvas[1].drawImage(bImg, 0, 0, 12, 12, b.xPos, b.yPos, 12, 12);
+                            } else {
+                                canvas[6].clearRect(b.ox, b.oy, 12, 12);
+                                //canvas[6].clearRect(b.xPos, b.yPos, 12, 12);
+                                canvas[6].drawImage(bullet_b1Img, 0, 0, 12, 12, b.xPos, b.yPos, 12, 12);
+                                /*if (b.type<=10) {
+                                    console.log("blue");
+                                    console.log(typeof b.type);
+                                    console.log(b.type+" pos "+b.xPos+"  "+b.yPos);
+                                    bullet_b1Img.src = "./resources/images/bullet/bullet_b1.png";
+                                    canvas[6].drawImage(bullet_b1Img, 0, 0, 12, 12, b.xPos, b.yPos, 12, 12);
+                                } else {
+                                    console.log("red");
+                                    console.log(typeof b.type);
+                                    console.log(b.type+" pos "+b.xPos+"  "+b.yPos);
+                                    bullet_b1Img.src = "./resources/images/bullet/bullet_b2.png";
+                                    canvas[6].drawImage(bullet_b2Img, 0, 0, 12, 12, b.xPos, b.yPos, 12, 12);
+                                }*/
+                            }
+                        } else if (b.flag == 0) {
+                            //new Audio("./resources/audios/hit.wav").play();
+                            let bombImg = new Image();
+                            bombImg.src = ".\\resources\\images\\others\\boom_dynamic.png";
+                            canvas[1].clearRect(b.ox, b.oy, 12, 12);
+                            canvas[6].clearRect(b.ox, b.oy, 12, 12);
+                            if (b.hitObj == 3) {
+                                game.animation(canvas[5], 100, bombImg, 96, b.hitX, b.hitY, 48, 0, 7,
+                                    game);
+                            } else if (b.hitObj == 4) {
+                                game.animation(canvas[5], 100, bombImg, 96, b.hitX, b.hitY, 36, 0, 7,
+                                    game);
+                            } else {
+                                game.animation(canvas[5], 100, bombImg, 96, b.hitX, b.hitY, 48, 0, 7,
+                                    game);
+                            }
+                        } else if (b.flag == -1) {
+                            canvas[1].clearRect(b.ox, b.oy, 12, 12);
+                        }
+                    }
+                    if (gameMode == 0) {
+                        let p = Data["p"];
+                        if (p.hp > 0) {
+                            let cm = [0, 0, 0, 0];
+                            if (p.tankNo == 1) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T1_0_r.png";
+                                canvas[7].clearRect(100, 740, 800, 20);
+                                canvas[7].fillText("PLAYER1 HP:" + p.hp, 100, 760);
+                            } else if (p.tankNo == 3) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T1_1.png";
+                            } else if (p.tankNo == 5) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T1_2.png";
+                            } else if (p.tankNo == 2) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T2_0_r.png";
+                                canvas[7].clearRect(100, 760, 800, 20);
+                                canvas[7].fillText("PLAYER2 HP:" + p.hp, 100, 780);
+                            } else if (p.tankNo == 4) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T2_1.png";
+                            } else if (p.tankNo == 0) {
+                                img.src = ".\\resources\\images\\playerTank\\tank_T2_2.png";
+                            }
+                            if (p.dir == 1) {//up
+                                cm = [0, 0, 48, 48];
+                            } else if (p.dir == 2) {//down
+                                cm = [0, 48, 48, 48];
+                            } else if (p.dir == 3) {//left
+                                cm = [0, 96, 48, 48];
+                            } else if (p.dir == 4) {//right
+                                cm = [0, 144, 48, 48];
+                            }
+                            canvas[1].clearRect(p.ox - 8, p.oy - 8, 64, 64);
+                            canvas[1].drawImage(img, cm[0], cm[1], cm[2], cm[3], p.x, p.y, 48, 48);
+                        } else {
+                            if (p.tankNo==1) {
+                                canvas[7].clearRect(100, 740, 800, 20);
+                                canvas[7].fillText("PLAYER1 HP:" + p.hp, 100, 760);
+                            } else if (p.tankNo==2) {
+                                canvas[7].clearRect(100, 760, 800, 20);
+                                canvas[7].fillText("PLAYER2 HP:" + p.hp, 100, 780);
+                            }
+                            canvas[1].clearRect(p.ox - 8, p.oy - 8, 64, 64);
+                        }
+                    } else if (gameMode==1) {
+                        let p1 = Data["p1"];
+                        let p2 = Data["p2"];
+                        if (p1.hp>0) {
+                            let tmpImg = new Image();
+                            let cm = [0, 0, 0, 0];
+                            tmpImg.src = ".\\resources\\images\\playerTank\\tank_T1_0_r.png";
+                            canvas[7].clearRect(100, 740, 800, 20);
+                            canvas[7].fillText("PLAYER1 HP:" + p1.hp, 100, 760);
+                            if (p1.dir == 1) {//up
+                                cm = [0, 0, 48, 48];
+                            } else if (p1.dir == 2) {//down
+                                cm = [0, 48, 48, 48];
+                            } else if (p1.dir == 3) {//left
+                                cm = [0, 96, 48, 48];
+                            } else if (p1.dir == 4) {//right
+                                cm = [0, 144, 48, 48];
+                            }
+                            canvas[1].clearRect(p1.ox - 8, p1.oy - 8, 64, 64);
+                            canvas[1].drawImage(tmpImg, cm[0], cm[1], cm[2], cm[3], p1.x, p1.y, 48, 48);
+                        } else {
+                            canvas[7].clearRect(100, 740, 800, 20);
+                            canvas[7].fillText("PLAYER1 HP:" + p1.hp, 100, 760);
+                            canvas[1].clearRect(p1.ox-8,p1.oy-8,64,64);
+                        }
+                        if (p2.hp>0) {
+                            let tmpImg = new Image();
+                            let cm = [0, 0, 0, 0];
+                            tmpImg.src = ".\\resources\\images\\playerTank\\tank_T2_0_r.png";
+                            canvas[7].clearRect(100, 760, 800, 20);
+                            canvas[7].fillText("PLAYER2 HP:" + p2.hp, 100, 780);
+                            if (p2.dir == 1) {//up
+                                cm = [0, 0, 48, 48];
+                            } else if (p2.dir == 2) {//down
+                                cm = [0, 48, 48, 48];
+                            } else if (p2.dir == 3) {//left
+                                cm = [0, 96, 48, 48];
+                            } else if (p2.dir == 4) {//right
+                                cm = [0, 144, 48, 48];
+                            }
+                            canvas[1].clearRect(p2.ox - 8, p2.oy - 8, 64, 64);
+                            canvas[1].drawImage(tmpImg, cm[0], cm[1], cm[2], cm[3], p2.x, p2.y, 48, 48);
+                        } else {
+                            canvas[7].clearRect(100, 760, 800, 20);
+                            canvas[7].fillText("PLAYER2 HP:" + p2.hp, 100, 780);
+                            canvas[1].clearRect(p2.ox-8,p2.oy-8,64,64);
+                        }
+                    }
+
+                });
+            }
+        })
+    </script>
+</body>
+
+</html>
